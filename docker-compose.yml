@@ -1,0 +1,13 @@
+version: '2'
+services:
+  proxy:
+    image: docker.io/istio/proxyv2:1.5.2 # TODO: replace with envoyproxy upstream
+    # image: docker.io/envoyproxy/envoy:v1.14.1 # TODO: replace with envoyproxy upstream
+    entrypoint: /usr/local/bin/envoy
+    command: -c /etc/envoy.yaml -l debug --service-cluster proxy
+    volumes:
+      - ./envoy.yaml:/etc/envoy.yaml
+      - ./apikey.wasm:/etc/envoy_filter_http_wasm_example.wasm
+    ports:
+      - "18000:80"
+      - "18001:8001"

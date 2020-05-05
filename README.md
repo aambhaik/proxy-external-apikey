@@ -1,7 +1,7 @@
-## http_auth_random
+## http_auth_apikey
 
 this example authorize requests depending
- on the hash values of a response from http://httpbin.org/uuid.
+ on the passed in apikey header and allows traffic to http://httpbin.org/uuid. Only one value of apikey is supported: 'mashery'. Any other value will result in access forbidden.
 
 ### build && run
 ```
@@ -11,7 +11,7 @@ tinygo build -o apikey.wasm -wasm-abi=generic -target wasm ./main.go && docker-c
 now you can make requests authorized randomly:  
 
 ```bash
-$ curl localhost:18000/uuid -v
+$ curl -H "apikey: mashery" localhost:18000/uuid -v
 *   Trying ::1...
 * TCP_NODELAY set
 * Connected to localhost (::1) port 18000 (#0)
@@ -32,7 +32,6 @@ $ curl localhost:18000/uuid -v
 {
   "uuid": "e1020f65-f97a-47cd-9b31-368ba2063b6a"
 }
-
 
 
 # curl localhost:18000/uuid -v

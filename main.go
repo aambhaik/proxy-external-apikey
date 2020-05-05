@@ -40,27 +40,27 @@ func (ctx *httpHeaders) OnHttpRequestHeaders(_ int) runtime.Action {
 		return runtime.ActionContinue
 	}
 
+	var apiKeyFound bool
+
 	for _, h := range hs {
 		runtime.LogInfo("request header: " + h[0] + ": " + h[1])
 		if h[0] == "apikey" {
+			apiKeyFound = true
 
 			if h[1] != validApiKey {
-				runtime.LogCritical("invalid apikey value!")
-				msg := "access forbidden"
-				runtime.LogInfo(msg)
-				ctx.SendHttpResponse(403, [][2]string{
-					{"powered-by", "proxy-wasm-go!!"},
-				}, msg)
-
-				return runtime.ActionPause
+				return ctx.InvalidAPIKey()
 			}
 
 			runtime.LogDebug("valid apikey found, proceed with the request")
 		}
 	}
 
-	ctx.DispatchHttpCall("httpbin", hs, "", [][2]string{}, 50000)
-	return runtime.ActionPause
+	if apiKeyFound {
+		ctx.DispatchHttpCall("httpbin", hs, "", [][2]string{}, 50000)
+		return runtime.ActionPause
+	} else {
+		return ctx.InvalidAPIKey()
+	}
 }
 
 // override default
@@ -78,4 +78,15 @@ func (ctx *httpHeaders) OnHttpCallResponse(_ uint32, _ int, bodySize int, _ int)
 // override default
 func (ctx *httpHeaders) OnLog() {
 	runtime.LogInfo(strconv.FormatUint(uint64(ctx.contextID), 10) + " finished")
+}
+
+func (ctx *httpHeaders) InvalidAPIKey() runtime.Action {
+	runtime.LogCritical("invalid apikey value!")
+	msg := "access forbidden"
+	runtime.LogInfo(msg)
+	ctx.SendHttpResponse(403, [][2]string{
+		{"powered-by", "proxy-wasm-go!!"},
+	}, msg)
+
+	return runtime.ActionPause
 }
